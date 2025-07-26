@@ -1,24 +1,27 @@
-#include <conio.h>
 #include <stdio.h>
+#include <windows.h>
 
 int main() {
-    printf("Press arrow keys (press 'q' to quit):\n");
+    printf("Press W, A, S, or D (ESC to quit)...\n");
+
     while (1) {
-        int c = _getch();
-        if (c == 0 || c == 224) { // Arrow keys or function keys
-            printf("%d", c);
-            int key = _getch();
-            switch (key) {
-                case 72: printf("Up arrow\n"); break;
-                case 80: printf("Down arrow\n"); break;
-                case 75: printf("Left arrow\n"); break;
-                case 77: printf("Right arrow\n"); break;
-            }
-        } else if (c == 'q') {
-            break;
-        } else {
-            printf("Pressed: %c\n", c);
-        }
+        // Check if keys are being held
+        if (GetAsyncKeyState(VK_ESCAPE) & 0x8000) break;
+
+        if (GetAsyncKeyState('W') & 0x8000)
+            printf("W is being held\n");
+
+        if (GetAsyncKeyState('A') & 0x8000)
+            printf("A is being held\n");
+
+        if (GetAsyncKeyState('S') & 0x8000)
+            printf("S is being held\n");
+
+        if (GetAsyncKeyState('D') & 0x8000)
+            printf("D is being held\n");
+
+        Sleep(50); // Small delay to reduce CPU usage
     }
+
     return 0;
 }

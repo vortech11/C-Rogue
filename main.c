@@ -14,9 +14,9 @@ const char BG = ' ';
 int n = 100; //x
 int m = 18; //y
 
-struct Vector2* viewport;
+struct Vector2 viewport;
 
-struct Vector2* camera;
+struct Vector2 camera;
 
 //float rotation = 0.785398;
 float rotation = 0;
@@ -28,66 +28,64 @@ struct Vector2 {
     float y;
 };
 
-void printVector2(struct Vector2* vector){
-    printf("%f %f\n", vector->x, vector->y);
+void printVector2(struct Vector2 vector){
+    printf("%f %f\n", vector.x, vector.y);
 }
 
-void add(struct Vector2* vector1, struct Vector2* vector2){
-    vector1->x += vector2->x;
-    vector1->y += vector2->y;
+struct Vector2 add(struct Vector2 vector1, struct Vector2 vector2){
+    vector1.x += vector2.x;
+    vector1.y += vector2.y;
+    return vector1;
 }
 
-void sub(struct Vector2* vector1, struct Vector2* vector2){
-    vector1->x -= vector2->x;
-    vector1->y -= vector2->y;
+struct Vector2 sub(struct Vector2 vector1, struct Vector2 vector2){
+    vector1.x -= vector2.x;
+    vector1.y -= vector2.y;
+    return vector1;
 }
 
-void mult(struct Vector2* vector1, struct Vector2* vector2){
-    vector1->x *= vector2->x;
-    vector1->y *= vector2->y;
+struct Vector2 scale(struct Vector2 vector1, float value){
+    vector1.x *= value;
+    vector1.y *= value;
+    return vector1;
 }
 
-void scale(struct Vector2* vector1, float value){
-    vector1->x *= value;
-    vector1->y *= value;
-}
-
-void set(struct Vector2* vector, float x, float y){
-    vector->x = x;
-    vector->y = y;
-}
-
-struct Vector2* createVector2(float x, float y){
-    struct Vector2* vector = malloc(sizeof(struct Vector2));
-    vector->x = x;
-    vector->y = y;
+struct Vector2 set(float value1, float value2){
+    struct Vector2 vector = {value1, value2};
     return vector;
 }
 
-struct Vector2* copyVector2(struct Vector2* vector1){
-    if (!vector1){
-        fprintf(stderr, "copyVector2: input vector is NULL\n");
-        exit(EXIT_FAILURE);
-    }
-    struct Vector2* vector2 = malloc(sizeof(struct Vector2));
-    if (!vector2){
-        fprintf(stderr, "Failed to allocate memory for Vector2\n");
-        exit(EXIT_FAILURE);
-    }
-    vector2->x = vector1->x;
-    vector2->y = vector1->y;
-    return vector2;
-}
+//struct Vector2* createVector2(float x, float y){
+//    struct Vector2* vector = malloc(sizeof(struct Vector2));
+//    vector->x = x;
+//    vector->y = y;
+//    return vector;
+//}
 
-struct Vector2* apply2x2Matrix(struct Vector2* vector0, struct Vector2* vector1, struct Vector2* vector2){
-    set(vector0, (vector1->x * vector0->x) + (vector2->x * vector0->y), (vector1->y * vector0->x) + (vector2->y * vector0->y));
+//struct Vector2* copyVector2(struct Vector2* vector1){
+//    if (!vector1){
+//        fprintf(stderr, "copyVector2: input vector is NULL\n");
+//        exit(EXIT_FAILURE);
+//    }
+//    struct Vector2* vector2 = malloc(sizeof(struct Vector2));
+//    if (!vector2){
+//        fprintf(stderr, "Failed to allocate memory for Vector2\n");
+//        exit(EXIT_FAILURE);
+//    }
+//    vector2->x = vector1->x;
+//    vector2->y = vector1->y;
+//    return vector2;
+//}
+
+struct Vector2 apply2x2Matrix(struct Vector2 vector0, struct Vector2 vector1, struct Vector2 vector2){
+    return set((vector1.x * vector0.x) + (vector2.x * vector0.y), (vector1.y * vector0.x) + (vector2.y * vector0.y));
 }
 
 struct Rect {
-    struct Vector2* p1;
-    struct Vector2* p2;
-    struct Vector2* p3;
-    struct Vector2* p4;
+    struct Vector2 p1;
+    struct Vector2 p2;
+    struct Vector2 p3;
+    struct Vector2 p4;
     int color;
     int fillType;
     struct Rect* next;
@@ -98,10 +96,10 @@ struct Rect* lastRect = NULL;
 
 struct Rect* createRect(int inputsx, int inputsy, int inputex, int inputey, char inputcolor, int inputfillType){
     struct Rect* pointer = malloc(sizeof(struct Rect));
-    pointer->p1 = createVector2(inputsx, inputsy);
-    pointer->p2 = createVector2(inputex, inputsy);
-    pointer->p3 = createVector2(inputex, inputey);
-    pointer->p4 = createVector2(inputsx, inputey);
+    pointer->p1 = set(inputsx, inputsy);
+    pointer->p2 = set(inputex, inputsy);
+    pointer->p3 = set(inputex, inputey);
+    pointer->p4 = set(inputsx, inputey);
     pointer->color = inputcolor;
     pointer->fillType = inputfillType;
     pointer->next = NULL;
@@ -118,10 +116,6 @@ struct Rect* createRect(int inputsx, int inputsy, int inputex, int inputey, char
 
 void recFreeRects(struct Rect* currentRect){
     if (currentRect != NULL){
-        free(currentRect->p1);
-        free(currentRect->p2);
-        free(currentRect->p3);
-        free(currentRect->p4);
         recFreeRects(currentRect->next);
         free(currentRect);
     }
@@ -224,56 +218,47 @@ void setAArect(char (*arr)[n], int startx, int starty, int endx, int endy, char 
 }
 
 void drawRect(char (*arr)[n], struct Rect* rect, char value){
-    struct Vector2* pointList[4];
-    pointList[0] = copyVector2(rect->p1);
-    pointList[1] = copyVector2(rect->p2);
-    pointList[2] = copyVector2(rect->p3);
-    pointList[3] = copyVector2(rect->p4);
+    struct Vector2 pointList[4];
+    pointList[0] = rect->p1;
+    pointList[1] = rect->p2;
+    pointList[2] = rect->p3;
+    pointList[3] = rect->p4;
 
     float rotationSin = sin(-rotation);
     float rotationCos = cos(-rotation);
 
-    struct Vector2* matrixX = createVector2(rotationCos, rotationSin);
-    struct Vector2* matrixY = createVector2(-rotationSin, rotationCos);
-    struct Vector2* tempCamera = copyVector2(camera);
-    struct Vector2* tempViewport = copyVector2(viewport);
+    struct Vector2 matrixX = {rotationCos, rotationSin};
+    struct Vector2 matrixY = {-rotationSin, rotationCos};
+    struct Vector2 tempCamera = camera;
+    struct Vector2 tempViewport = viewport;
 
-    scale(tempViewport, 0.5);
+    tempViewport = scale(tempViewport, 0.5);
 
     for(int i = 0; i < 4; i++){
-        sub(pointList[i], tempCamera);
-        apply2x2Matrix(pointList[i], matrixX, matrixY);
-        add(pointList[i], tempViewport);
+        pointList[i] = sub(pointList[i], tempCamera);
+        pointList[i] = apply2x2Matrix(pointList[i], matrixX, matrixY);
+        pointList[i] = add(pointList[i], tempViewport);
     }
     
     for(int i = 0; i < 4; i++){
-        drawLine(arr, round(pointList[i]->x), round(pointList[i]->y), round(pointList[(i + 1) % 4]->x), round(pointList[(i + 1) % 4]->y), value);
+        drawLine(arr, round(pointList[i].x), round(pointList[i].y), round(pointList[(i + 1) % 4].x), round(pointList[(i + 1) % 4].y), value);
     }
-
-    free(matrixX);
-    free(matrixY);
-    free(tempCamera);
-    free(tempViewport);
-    free(pointList[0]);
-    free(pointList[1]);
-    free(pointList[2]);
-    free(pointList[3]);
 };
 
 void setRects(char (*arr)[n]){
     struct Rect* currentRect = firstRect;
     while (currentRect != NULL){
         int fillColor = currentRect->color;
-        int startx = round(currentRect->p1->x);
-        int starty = round(currentRect->p1->y);
-        int endx = round(currentRect->p3->x);
-        int endy = round(currentRect->p3->y);
+        int startx = round(currentRect->p1.x);
+        int starty = round(currentRect->p1.y);
+        int endx = round(currentRect->p3.x);
+        int endy = round(currentRect->p3.y);
         switch (currentRect->fillType){
             case 1:
-                setAArect(arr, startx - camera->x, starty - camera->y, endx - camera->x, endy - camera->y, fillColor);
+                setAArect(arr, startx - camera.x, starty - camera.y, endx - camera.x, endy - camera.y, fillColor);
                 break;
             case 2:
-                setAAwireframeRect(arr, startx - camera->x, starty - camera->y, endx - camera->x, endy - camera->y, fillColor);
+                setAAwireframeRect(arr, startx - camera.x, starty - camera.y, endx - camera.x, endy - camera.y, fillColor);
                 break;
             case 3:
                 drawRect(arr, currentRect, fillColor);
@@ -283,18 +268,18 @@ void setRects(char (*arr)[n]){
     }
 }
 
-void moveRect(struct Rect* rect, int dx, int dy){
-    struct Vector2* pointList[4]; 
-    pointList[0] = rect->p1;
-    pointList[1] = rect->p2;
-    pointList[2] = rect->p3;
-    pointList[3] = rect->p4;
-
-    for (int i = 0; i < 4; i++){
-        pointList[i]->x += dx;
-        pointList[i]->y += dy;
-    }
-}
+//void moveRect(struct Rect* rect, int dx, int dy){
+//    struct Vector2 pointList[4]; 
+//    pointList[0] = rect->p1;
+//    pointList[1] = rect->p2;
+//    pointList[2] = rect->p3;
+//    pointList[3] = rect->p4;
+//
+//    for (int i = 0; i < 4; i++){
+//        pointList[i].x += dx;
+//        pointList[i].y += dy;
+//    }
+//}
 
 void getUserInput(){
     int c = _getch();
@@ -308,30 +293,28 @@ void getUserInput(){
         }
     }
     else {
-        struct Vector2* move = createVector2(0, 0);
-        struct Vector2* forward = createVector2(cosf(rotation), sinf(rotation));
-        struct Vector2* right = createVector2(-forward->y, forward->x);
+        struct Vector2 move = {0, 0};
+        struct Vector2 forward = {cosf(rotation), sinf(rotation)};
+        struct Vector2 right = {-forward.y, forward.x};
         switch (c){
             case 'a': 
-                sub(move, forward);
+                move = sub(move, forward);
                 break;
             case 'd': 
-                add(move, forward);
+                move = add(move, forward);
                 break;
             case 'w': 
-                sub(move, right);
+                move = sub(move, right);
                 break;
             case 's': 
-                add(move, right);
+                move = add(move, right);
                 break;
 
 
             case 'q': running = false; break;
         }
-        add(camera, move);
-        free(move);
-        free(forward);
-        free(right);
+        move = scale(move, 1);
+        camera = add(camera, move);
     }
 }
 
@@ -361,8 +344,8 @@ void* generateWorld(void* inputWorld){
 int main(){
     n++;
 
-    camera = createVector2(0, 0);
-    viewport = createVector2(n - 2, m - 1);
+    camera = set(0, 0);
+    viewport = set(n - 2, m - 1);
 
     //struct Rect* head = createRect(2, 2, 4, 4, '0', 1);
     //struct Rect* second = createRect(27, 3, 35, 8, '0', 3);

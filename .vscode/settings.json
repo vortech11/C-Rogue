@@ -6,6 +6,9 @@
         "type_traits": "c",
         "xtr1common": "c",
         "cstdlib": "c",
-        "cmath": "c"
+        "cmath": "c",
+        "windows.h": "c",
+        "conio.h": "c",
+        "stdlib.h": "c"
     }
 }
