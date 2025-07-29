@@ -2,6 +2,7 @@
 #include <stdlib.h>
 #include <conio.h>
 #include <stdbool.h>
+#include <windows.h>
 #include <math.h>
 
 struct Vector2;
@@ -21,7 +22,42 @@ struct Vector2 camera;
 //float rotation = 0.785398;
 float rotation = 0;
 
+float zoom = 1;
+
 bool running = true;
+
+struct Color {
+    int style;
+    int color;
+    int bg;
+};
+
+//0 Reset All Attributes (return to normal mode)
+//1 Bright (usually turns on BOLD)
+//2 Dim
+//3 Underline
+//5 Blink
+//7 Reverse
+//8 Hidden
+
+// 30/40 Black
+// 31/41 Red
+// 32/42 Green
+// 33/43 Yellow
+// 34/44 Blue
+// 35/45 Magenta
+// 36/46 Cyan
+// 37/47 White
+
+struct Color createColor(int instyle, int incolor, int inbg){
+    struct Color color;
+    color.style = instyle; 
+    color.color = incolor;
+    color.bg = inbg;
+    return color;
+}
+
+
 
 struct Vector2 {
     float x;
@@ -129,20 +165,19 @@ void printPos(char (*arr)[n], int x, int y){
     printf("%d", arr[y][x]);
 }
 
-void printEntire(char (*arr)[n]){
+void printEntire(void *inputArr){
+    char *arr = inputArr;
     printf("\e[1;1H\e[2J");
-    for(int i = 0; i < m; i++){
-        printf("%s\n", &arr[i]);
-    }
+    printf("%s\n", arr);
 }
 
 void oldPrint(char (*arr)[n]){
     for(int i = 0; i < m; i++){
         for(int j = 0; j < n; j++){
-            printf("%d ", arr[i][j]);
+            printf("%c", arr[i][j]);
         }
-        printf("\n");
     }
+    printf("\n");
 }
 
 void setPos(char (*arr)[n], int x, int y, char value){
@@ -150,11 +185,53 @@ void setPos(char (*arr)[n], int x, int y, char value){
 }
 
 void setEntire(char (*arr)[n], char value) {
+    char endChar = '\n';
     for(int i = 0; i < m; i++){
         for(int j = 0; j < n - 1; j++){
             setPos(arr, j, i, value);
         }
-        arr[i][n - 1] = '\0';
+        if (i == m - 1){
+            endChar = '\0';
+        }
+        arr[i][n - 1] = endChar;
+    }
+}
+
+float edgeFunction(struct Vector2 a, struct Vector2 b, struct Vector2 c){
+    return (b.x - a.x) * (c.y - a.y) - (b.y - a.y) * (c.x - a.x);
+}
+
+void drawTriangle(char (*arr)[n], struct Vector2 A, struct Vector2 B, struct Vector2 C){
+    const float ABC = edgeFunction(A, B, C);
+
+    if (ABC < 0){
+        return;
+    }
+
+    struct Vector2 P = {0, 0};
+
+    const float minX = min(min(A.x, B.x), C.x);
+    const float minY = min(min(A.y, B.y), C.y);
+    const float maxX = max(max(A.x, B.x), C.x);
+    const float maxY = max(max(A.y, B.y), C.y);
+
+    float ABP, BCP, CAP;
+    float weightA, weightB, weightC;
+
+    for(P.y = minY; P.y < maxY; P.y++){
+        for(P.x = minX; P.x < maxX; P.x++){
+            ABP = edgeFunction(A, B, P);
+            BCP = edgeFunction(B, C, P);
+            CAP = edgeFunction(C, A, P);
+
+            if(ABP < 0 || BCP < 0 || CAP < 0) continue;
+
+            weightA = BCP / ABC;
+            weightB = CAP / ABC;
+            weightC = ABP / ABC;
+
+            setPos(arr, P.x, P.y, 'P');
+        }
     }
 }
 
@@ -237,6 +314,7 @@ void drawRect(char (*arr)[n], struct Rect* rect, char value){
     for(int i = 0; i < 4; i++){
         pointList[i] = sub(pointList[i], tempCamera);
         pointList[i] = apply2x2Matrix(pointList[i], matrixX, matrixY);
+        pointList[i] = scale(pointList[i], zoom);
         pointList[i] = add(pointList[i], tempViewport);
     }
     
@@ -282,40 +360,30 @@ void setRects(char (*arr)[n]){
 //}
 
 void getUserInput(){
-    int c = _getch();
-    if (c == 0 || c == 224) {
-        int key = _getch();
-        switch (key) {
-            case 72:  break; // up
-            case 80:  break;  // down
-            case 75: rotation -= 0.1; break; // left
-            case 77: rotation += 0.1; break;  // right
+    _getch();
+    if (GetAsyncKeyState(VK_ESCAPE) & 0x8000) running = false;
+
+    if (GetAsyncKeyState(VK_LEFT) & 0x8000) rotation -= 0.1;
+    if (GetAsyncKeyState(VK_RIGHT) & 0x8000) rotation += 0.1;
+    if (GetAsyncKeyState(VK_UP) & 0x8000) zoom += 0.1;
+    if (GetAsyncKeyState(VK_DOWN) & 0x8000){ 
+        zoom -= 0.1;
+        if (zoom < 0) {
+            zoom = 0;
         }
     }
-    else {
-        struct Vector2 move = {0, 0};
-        struct Vector2 forward = {cosf(rotation), sinf(rotation)};
-        struct Vector2 right = {-forward.y, forward.x};
-        switch (c){
-            case 'a': 
-                move = sub(move, forward);
-                break;
-            case 'd': 
-                move = add(move, forward);
-                break;
-            case 'w': 
-                move = sub(move, right);
-                break;
-            case 's': 
-                move = add(move, right);
-                break;
 
+    struct Vector2 move = {0, 0};
+    struct Vector2 forward = {cosf(rotation), sinf(rotation)};
+    struct Vector2 right = {-forward.y, forward.x};
 
-            case 'q': running = false; break;
-        }
-        move = scale(move, 1);
-        camera = add(camera, move);
-    }
+    if (GetAsyncKeyState('A') & 0x8000) move = sub(move, forward);
+    if (GetAsyncKeyState('D') & 0x8000) move = add(move, forward);
+    if (GetAsyncKeyState('W') & 0x8000) move = sub(move, right);
+    if (GetAsyncKeyState('S') & 0x8000) move = add(move, right);
+
+    move = scale(move, 1);
+    camera = add(camera, move);
 }
 
 void* generateWorld(void* inputWorld){
@@ -333,6 +401,12 @@ void* generateWorld(void* inputWorld){
     setAAwireframeRect(world, 0, 0, n - 2, m - 1, '#');
 
     setPos(world, (n - 2) / 2, (m - 1) / 2, '%');
+
+    struct Vector2 P1 = {70, 7};
+    struct Vector2 P2 = {90, 10};
+    struct Vector2 P3 = {80, 12};
+
+    drawTriangle(world, P1, P2, P3);
 
     //setAAline(world, 0, 0, n - 2, 0, '#');
 
@@ -359,13 +433,18 @@ int main(){
     while (running){
         world = generateWorld(world);
 
+        //oldPrint(world);
         printEntire(world);
 
         getUserInput();
+
+        Sleep(50);
     }
 
     free(world);
     freeRects();
+
+    system("cls");
     return 0;
 }
 
