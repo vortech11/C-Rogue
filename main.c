@@ -1,5 +1,6 @@
 #include <stdio.h> 
 #include <stdlib.h>
+#include <string.h>
 #include <conio.h>
 #include <stdbool.h>
 #include <windows.h>
@@ -7,13 +8,12 @@
 
 struct Vector2;
 
-const char BG = ' ';
-
 // 1000 x 250 
 // 100 x 18
 
-int n = 100; //x
-int m = 18; //y
+int x = 1000; //x
+int y = 250; //y
+const int z = 21; //z
 
 struct Vector2 viewport;
 
@@ -27,37 +27,26 @@ float zoom = 1;
 bool running = true;
 
 struct Color {
-    int style;
-    int color;
-    int bg;
+    int R;
+    int G;
+    int B;
 };
 
-//0 Reset All Attributes (return to normal mode)
-//1 Bright (usually turns on BOLD)
-//2 Dim
-//3 Underline
-//5 Blink
-//7 Reverse
-//8 Hidden
+const struct Color BG = {0, 0, 0};
+const struct Color PlayerColor = {252, 186, 3};
+const struct Color wallColor = {255, 255, 255};
 
-// 30/40 Black
-// 31/41 Red
-// 32/42 Green
-// 33/43 Yellow
-// 34/44 Blue
-// 35/45 Magenta
-// 36/46 Cyan
-// 37/47 White
-
-struct Color createColor(int instyle, int incolor, int inbg){
+struct Color createColor(int R, int G, int B){
     struct Color color;
-    color.style = instyle; 
-    color.color = incolor;
-    color.bg = inbg;
+    color.R = R;
+    color.G = G;
+    color.B = B;
     return color;
 }
 
-
+char* formatColor(struct Color color, char *var){
+    snprintf(var, z+1, "\e[48;2;%03d;%03d;%03dm  ", color.R, color.G, color.B);
+}
 
 struct Vector2 {
     float x;
@@ -122,22 +111,20 @@ struct Rect {
     struct Vector2 p2;
     struct Vector2 p3;
     struct Vector2 p4;
-    int color;
-    int fillType;
+    struct Color color;
     struct Rect* next;
 };
 
 struct Rect* firstRect = NULL;
 struct Rect* lastRect = NULL;
 
-struct Rect* createRect(int inputsx, int inputsy, int inputex, int inputey, char inputcolor, int inputfillType){
+struct Rect* createRect(int inputsx, int inputsy, int inputex, int inputey, struct Color inputcolor){
     struct Rect* pointer = malloc(sizeof(struct Rect));
     pointer->p1 = set(inputsx, inputsy);
     pointer->p2 = set(inputex, inputsy);
     pointer->p3 = set(inputex, inputey);
     pointer->p4 = set(inputsx, inputey);
     pointer->color = inputcolor;
-    pointer->fillType = inputfillType;
     pointer->next = NULL;
     if (firstRect == NULL){
         firstRect = pointer;
@@ -161,39 +148,44 @@ void freeRects(){
     recFreeRects(firstRect);
 }
 
-void printPos(char (*arr)[n], int x, int y){
-    printf("%d", arr[y][x]);
+void fastPrint(void* inarr){
+    char *arr = inarr;
+    printf("\e[1;1H\e[2J%s\n", arr);
 }
 
-void printEntire(void *inputArr){
-    char *arr = inputArr;
-    printf("\e[1;1H\e[2J");
-    printf("%s\n", arr);
-}
-
-void oldPrint(char (*arr)[n]){
-    for(int i = 0; i < m; i++){
-        for(int j = 0; j < n; j++){
-            printf("%c", arr[i][j]);
+void oldPrint(char (*arr)[x][z]){
+    for(int i = 0; i < y; i++){
+        for(int j = 0; j < x; j++){
+            //for(int k = 0; k < z; k++){
+            //    printf("%c ", arr[i][j][k]);
+            //}
+            printf("%s", arr[i][j]);
         }
+        //printf("\n");
     }
     printf("\n");
 }
 
-void setPos(char (*arr)[n], int x, int y, char value){
-    if (x < n - 1 && x >= 0 && y < m && y >= 0) { arr[y][x] = value; }
+void setPos(char (*arr)[x][z], int px, int py, char *value){
+    if (px < x - 1 && px >= 0 && py < y && py >= 0) { strncpy(arr[py][px], value, z); }
 }
 
-void setEntire(char (*arr)[n], char value) {
-    char endChar = '\n';
-    for(int i = 0; i < m; i++){
-        for(int j = 0; j < n - 1; j++){
+void setPosColor(char (*arr)[x][z], int px, int py, struct Color color){
+    char colorValue[z];
+    formatColor(color, colorValue);
+    setPos(arr, px, py, colorValue);
+}
+
+void setEntire(char (*arr)[x][z], char *value) {
+    char endChar[] = "\033[00;0;000;000;000m \n";
+    for(int i = 0; i < y; i++){
+        for(int j = 0; j < x - 1; j++){
             setPos(arr, j, i, value);
         }
-        if (i == m - 1){
-            endChar = '\0';
+        if (i == y - 1){
+            strncpy(endChar, "\033[00;0;000;000;000m \0", z);
         }
-        arr[i][n - 1] = endChar;
+        strncpy(arr[i][x - 1], endChar, z);
     }
 }
 
@@ -201,7 +193,7 @@ float edgeFunction(struct Vector2 a, struct Vector2 b, struct Vector2 c){
     return (b.x - a.x) * (c.y - a.y) - (b.y - a.y) * (c.x - a.x);
 }
 
-void drawTriangle(char (*arr)[n], struct Vector2 A, struct Vector2 B, struct Vector2 C){
+void drawTriangle(char (*arr)[x][z], struct Vector2 A, struct Vector2 B, struct Vector2 C, struct Color CA, struct Color CB, struct Color CC){
     const float ABC = edgeFunction(A, B, C);
 
     if (ABC < 0){
@@ -230,40 +222,17 @@ void drawTriangle(char (*arr)[n], struct Vector2 A, struct Vector2 B, struct Vec
             weightB = CAP / ABC;
             weightC = ABP / ABC;
 
-            setPos(arr, P.x, P.y, 'P');
+            float r = CA.R * weightA + CB.R * weightB + CC.R * weightC;
+            float g = CA.G * weightA + CB.G * weightB + CC.G * weightC;
+            float b = CA.B * weightA + CB.B * weightB + CC.B * weightC;
+            struct Color newColor = {r, g, b};
+
+            setPosColor(arr, P.x, P.y, newColor);
         }
     }
 }
 
-void setAAline(char (*arr)[n], int startx, int starty, int endx, int endy, char value) {
-    int start;
-    int end;
-    int same;
-    int temp;
-    bool vertical;
-    if (startx == endx){
-        start = starty;
-        end = endy;
-        same = startx;
-        vertical = false;
-    }
-    else {
-        start = startx;
-        end = endx;
-        same = starty;
-        vertical = true;
-    }
-    if (start > end){
-        temp = start;
-        start = end;
-        end = temp;
-    }
-    for(int i = start; i < end + 1; i++) {
-        (vertical) ? setPos(arr, i, same, value) : setPos(arr, same, i, value);
-    }
-}
-
-void drawLine(char (*arr)[n], int startx, int starty, int endx, int endy, char value){
+void drawLine(char (*arr)[x][z], int startx, int starty, int endx, int endy, struct Color value){
     int dx = abs(endx - startx);
     int dy = abs(endy - starty);
     int sx = (startx < endx) ? 1 : -1;
@@ -271,7 +240,7 @@ void drawLine(char (*arr)[n], int startx, int starty, int endx, int endy, char v
     int err = dx - dy;
 
     while (1) {
-        setPos(arr, startx, starty, value);
+        setPosColor(arr, startx, starty, value);
         if (startx == endx && starty == endy) break;
         int e2 = 2 * err;
         if (e2 > -dy) { err -= dy; startx += sx; }
@@ -279,22 +248,7 @@ void drawLine(char (*arr)[n], int startx, int starty, int endx, int endy, char v
     }
 }
 
-void setAAwireframeRect(char (*arr)[n], int startx, int starty, int endx, int endy, char value){
-    setAAline(arr, startx, starty, endx, starty, value);
-    setAAline(arr, endx, starty+1, endx, endy, value);
-    setAAline(arr, startx, endy, endx - 1, endy, value);
-    setAAline(arr, startx, starty + 1, startx, endy - 1, value);
-}
-
-void setAArect(char (*arr)[n], int startx, int starty, int endx, int endy, char value) {
-    for (int i = startx; i < endx + 1; i++){
-        for(int j = starty; j < endy + 1; j++){
-            setPos(arr, i, j, value);
-        }
-    }
-}
-
-void drawRect(char (*arr)[n], struct Rect* rect, char value){
+void drawRect(char (*arr)[x][z], struct Rect* rect, struct Color value){
     struct Vector2 pointList[4];
     pointList[0] = rect->p1;
     pointList[1] = rect->p2;
@@ -323,41 +277,32 @@ void drawRect(char (*arr)[n], struct Rect* rect, char value){
     }
 };
 
-void setRects(char (*arr)[n]){
+void setRects(char (*arr)[x][z]){
     struct Rect* currentRect = firstRect;
     while (currentRect != NULL){
-        int fillColor = currentRect->color;
+        struct Color fillColor = currentRect->color;
         int startx = round(currentRect->p1.x);
         int starty = round(currentRect->p1.y);
         int endx = round(currentRect->p3.x);
         int endy = round(currentRect->p3.y);
-        switch (currentRect->fillType){
-            case 1:
-                setAArect(arr, startx - camera.x, starty - camera.y, endx - camera.x, endy - camera.y, fillColor);
-                break;
-            case 2:
-                setAAwireframeRect(arr, startx - camera.x, starty - camera.y, endx - camera.x, endy - camera.y, fillColor);
-                break;
-            case 3:
-                drawRect(arr, currentRect, fillColor);
-                break;
-        }
+        drawRect(arr, currentRect, fillColor);
+
         currentRect = currentRect->next;
     }
 }
 
-//void moveRect(struct Rect* rect, int dx, int dy){
-//    struct Vector2 pointList[4]; 
-//    pointList[0] = rect->p1;
-//    pointList[1] = rect->p2;
-//    pointList[2] = rect->p3;
-//    pointList[3] = rect->p4;
-//
-//    for (int i = 0; i < 4; i++){
-//        pointList[i].x += dx;
-//        pointList[i].y += dy;
-//    }
-//}
+////void moveRect(struct Rect* rect, int dx, int dy){
+////    struct Vector2 pointList[4]; 
+////    pointList[0] = rect->p1;
+////    pointList[1] = rect->p2;
+////    pointList[2] = rect->p3;
+////    pointList[3] = rect->p4;
+////
+////    for (int i = 0; i < 4; i++){
+////        pointList[i].x += dx;
+////        pointList[i].y += dy;
+////    }
+////}
 
 void getUserInput(){
     _getch();
@@ -387,28 +332,31 @@ void getUserInput(){
 }
 
 void* generateWorld(void* inputWorld){
-    char (*world)[n] = inputWorld;
+    char (*world)[x][z] = inputWorld;
     if (inputWorld == NULL) {
-        world = malloc(sizeof(char[m][n]));
+        world = malloc(sizeof(char[y][x][z]));
     }
 
     if (world == NULL) {
         fprintf(stderr, "Memory allocation failed\n");
     }
 
-    setEntire(world, BG);
+    char colorValue[z];
+    formatColor(BG, colorValue);
 
-    setAAwireframeRect(world, 0, 0, n - 2, m - 1, '#');
+    setEntire(world, colorValue);
 
-    setPos(world, (n - 2) / 2, (m - 1) / 2, '%');
+    setPosColor(world, (x - 2) / 2, (y - 1) / 2, PlayerColor);
 
     struct Vector2 P1 = {70, 7};
     struct Vector2 P2 = {90, 10};
-    struct Vector2 P3 = {80, 12};
+    struct Vector2 P3 = {80, 16};
 
-    drawTriangle(world, P1, P2, P3);
-
-    //setAAline(world, 0, 0, n - 2, 0, '#');
+    struct Color C1 = {255, 0, 0};
+    struct Color C2 = {0, 255, 0};
+    struct Color C3 = {0, 0, 255};
+    
+    drawTriangle(world, P1, P2, P3, C1, C2, C3);
 
     setRects(world);
 
@@ -416,29 +364,26 @@ void* generateWorld(void* inputWorld){
 }
 
 int main(){
-    n++;
+    x++;
 
     camera = set(0, 0);
-    viewport = set(n - 2, m - 1);
+    viewport = set(x - 2, y - 1);
 
-    //struct Rect* head = createRect(2, 2, 4, 4, '0', 1);
-    //struct Rect* second = createRect(27, 3, 35, 8, '0', 3);
-    struct Rect* first = createRect(-3, -3, 3, 3, 'e', 3);
-    struct Rect* second = createRect(12, 12, 18, 18, 'e', 3);
+    struct Rect* second = createRect(27, 3, 35, 8, wallColor);
+    struct Rect* first = createRect(-3, -3, 3, 3, wallColor);
+    //struct Rect* second = createRect(12, 12, 18, 18, wallColor, 3);
 
-    //printf("%d", head->next->next->starty);
-
-    char (*world)[n] = NULL;
+    char (*world)[x][z] = NULL;
     
     while (running){
         world = generateWorld(world);
 
         //oldPrint(world);
-        printEntire(world);
+        fastPrint(world);
 
         getUserInput();
 
-        Sleep(50);
+        Sleep(25);
     }
 
     free(world);
