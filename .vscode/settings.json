@@ -1,18 +1,3 @@
 {
-    "C_Cpp.errorSquiggles": "disabled",
-    "files.associations": {
-        "stdio.h": "c",
-        "unistd.h": "c",
-        "type_traits": "c",
-        "xtr1common": "c",
-        "cstdlib": "c",
-        "cmath": "c",
-        "windows.h": "c",
-        "conio.h": "c",
-        "stdlib.h": "c",
-        "*.rh": "c",
-        "math.h": "c",
-        "stdbool.h": "c",
-        "string.h": "c"
-    }
+    "C_Cpp.default.configurationProvider": "ms-vscode.cmake-tools"
 }
