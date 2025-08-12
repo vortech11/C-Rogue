@@ -1,5 +1,14 @@
-cmake_minimum_required(VERSION 3.10.0)
-project(rogue VERSION 0.1.0 LANGUAGES C)
+cmake_minimum_required(VERSION 3.10)
 
-add_executable(rogue color.c main.c vector2.c render.c)
+project(CRogue)
 
+add_executable(
+    CRogue
+    main.c
+    vector2.c
+    color.c
+    render.c
+    point.c
+    rooms.c
+    player.c
+)

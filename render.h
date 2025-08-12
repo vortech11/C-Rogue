@@ -19,6 +19,8 @@ typedef struct {
 
     float zoom;
 
+    float cachedSin;
+    float cachedCos;
 
 } RenderEngine;
 

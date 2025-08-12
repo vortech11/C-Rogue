@@ -1,0 +1,3 @@
+"C:\Program Files\CMake\bin\cmake.exe" -E rm -f CMakeFiles\CRogue.dir/objects.a
+C:\MinGW\bin\ar.exe qc CMakeFiles\CRogue.dir/objects.a @CMakeFiles\CRogue.dir\objects1.rsp
+C:\MinGW\bin\gcc.exe -g -Wl,--whole-archive CMakeFiles\CRogue.dir/objects.a -Wl,--no-whole-archive -o CRogue.exe -Wl,--out-implib,libCRogue.dll.a -Wl,--major-image-version,0,--minor-image-version,0 @CMakeFiles\CRogue.dir\linkLibs.rsp
