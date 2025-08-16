@@ -12,7 +12,7 @@ Color createColor(int R, int G, int B){
 const Color WALL = {255, 255, 255};
 const Color PLAYER = {252, 186, 3};
 
-void printColor(Color color){
+void printColorValues(Color color){
     printf("%d %d %d\n", color.R, color.G, color.B);
 }
 

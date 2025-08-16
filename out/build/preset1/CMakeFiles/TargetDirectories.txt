@@ -1,3 +1,3 @@
-C:/Users/brend/git_projects/C-Rogue/out/build/preset1/CMakeFiles/CRogue.dir
-C:/Users/brend/git_projects/C-Rogue/out/build/preset1/CMakeFiles/edit_cache.dir
-C:/Users/brend/git_projects/C-Rogue/out/build/preset1/CMakeFiles/rebuild_cache.dir
+C:/Users/Brendan/Documents/Git-Stuff/C-Rogue/out/build/preset1/CMakeFiles/CRogue.dir
+C:/Users/Brendan/Documents/Git-Stuff/C-Rogue/out/build/preset1/CMakeFiles/edit_cache.dir
+C:/Users/Brendan/Documents/Git-Stuff/C-Rogue/out/build/preset1/CMakeFiles/rebuild_cache.dir

@@ -4,8 +4,6 @@
 #include "point.h"
 #include "render.h"
 
-RenderEngine renderEngine;
-
 typedef struct Room {
     Point* points;
     int pointNum;

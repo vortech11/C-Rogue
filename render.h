@@ -27,6 +27,10 @@ typedef struct {
 extern RenderEngine renderEngine;
 
 void fastPrint(void* inarr);
+
+void printColor(char color[z]);
+
+void printColorChars(char color[z]);
  
 void oldPrint(char (*arr)[renderEngine.x][z]);
  
@@ -41,6 +45,8 @@ float edgeFunction(Vector2 a, Vector2 b, Vector2 c);
 void drawTriangle(char (*arr)[renderEngine.x][z], Vector2 A, Vector2 B, Vector2 C, Color CA, Color CB, Color CC);
  
 void drawLine(char (*arr)[renderEngine.x][z], int startx, int starty, int endx, int endy, Color value);
+
+Vector2 transformPoint(Vector2 pointPos);
  
  
 #endif

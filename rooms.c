@@ -8,8 +8,6 @@
 #include "point.h"
 #include "render.h"
 
-RenderEngine renderEngine;
-
 Room* firstRoom = NULL;
 Room* lastRoom = NULL;
 
@@ -44,24 +42,12 @@ void drawRoom(char (*arr)[renderEngine.x][z], Room* room){
     Point* points = room->points;
     Point* transformedPoints = createPointList(room->pointNum);
 
-    float rotationSin = renderEngine.cachedSin;
-    float rotationCos = renderEngine.cachedCos;
-
-    Vector2 matrixX = {rotationCos, rotationSin};
-    Vector2 matrixY = {-rotationSin, rotationCos};
-    Vector2 tempCamera = renderEngine.camera;
-    Vector2 tempViewport = renderEngine.viewport;
-    
-    tempViewport = scale(tempViewport, 0.5);
-    
     Point point;
 
     for(int i = 0; i < room->pointNum; i++){
         point = points[i];
-        point.position = sub(point.position, tempCamera);
-        point.position = apply2x2Matrix(point.position, matrixX, matrixY);
-        point.position = scale(point.position, renderEngine.zoom);
-        point.position = add(point.position, tempViewport);
+        point.position = transformPoint(point.position);
+        //point.position = add(point.position, scale(renderEngine.viewport, 0.5));
         transformedPoints[i] = point;
     }
 

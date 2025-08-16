@@ -4,13 +4,28 @@
 #include <math.h>
 
 #include "render.h"
-#include "color.h"
-#include "vector2.h"
+#include "point.h"
 
 
 void fastPrint(void* inarr){
     char *arr = inarr;
     printf("\e[1;1H\e[2J%s\n", arr);
+}
+
+void printColor(char color[z]){
+    char *toBePrinted = malloc(22 * sizeof(char));
+    strncpy(toBePrinted, color, z);
+    toBePrinted[21] = '\0';
+    printf("%s", toBePrinted);
+    printf("\0[00;0;000;000;000m \n");
+    free(toBePrinted);
+}
+
+void printColorChars(char color[z]){
+    for(int i = 0; i < z; i++){
+        printf("%c ", color[i]);
+    }
+    printf("\n");
 }
 
 void oldPrint(char (*arr)[renderEngine.x][z]){
@@ -106,4 +121,12 @@ void drawLine(char (*arr)[renderEngine.x][z], int startx, int starty, int endx, 
         if (e2 > -dy) { err -= dy; startx += sx; }
         if (e2 < dx)  { err += dx; starty += sy; }
     }
+}
+
+Vector2 transformPoint(Vector2 pointPos){
+    pointPos = sub(pointPos, renderEngine.camera);
+    pointPos = apply2x2Matrix(pointPos, (Vector2){renderEngine.cachedCos, renderEngine.cachedSin}, (Vector2){-renderEngine.cachedSin, renderEngine.cachedCos});
+    pointPos = scale(pointPos, renderEngine.zoom);
+    pointPos = add(pointPos, scale(renderEngine.viewport, 0.5));
+    return pointPos;
 }

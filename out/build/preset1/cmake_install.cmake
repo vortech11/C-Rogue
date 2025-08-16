@@ -1,8 +1,8 @@
-# Install script for directory: C:/Users/brend/git_projects/C-Rogue
+# Install script for directory: C:/Users/Brendan/Documents/Git-Stuff/C-Rogue
 
 # Set the install prefix
 if(NOT DEFINED CMAKE_INSTALL_PREFIX)
-  set(CMAKE_INSTALL_PREFIX "C:/Users/brend/git_projects/C-Rogue/out/install/preset1")
+  set(CMAKE_INSTALL_PREFIX "C:/Users/Brendan/Documents/Git-Stuff/C-Rogue/out/install/preset1")
 endif()
 string(REGEX REPLACE "/$" "" CMAKE_INSTALL_PREFIX "${CMAKE_INSTALL_PREFIX}")
 
@@ -34,13 +34,13 @@ endif()
 
 # Set path to fallback-tool for dependency-resolution.
 if(NOT DEFINED CMAKE_OBJDUMP)
-  set(CMAKE_OBJDUMP "C:/MinGW/bin/objdump.exe")
+  set(CMAKE_OBJDUMP "C:/msys64/ucrt64/bin/objdump.exe")
 endif()
 
 string(REPLACE ";" "\n" CMAKE_INSTALL_MANIFEST_CONTENT
        "${CMAKE_INSTALL_MANIFEST_FILES}")
 if(CMAKE_INSTALL_LOCAL_ONLY)
-  file(WRITE "C:/Users/brend/git_projects/C-Rogue/out/build/preset1/install_local_manifest.txt"
+  file(WRITE "C:/Users/Brendan/Documents/Git-Stuff/C-Rogue/out/build/preset1/install_local_manifest.txt"
      "${CMAKE_INSTALL_MANIFEST_CONTENT}")
 endif()
 if(CMAKE_INSTALL_COMPONENT)
@@ -56,6 +56,6 @@ else()
 endif()
 
 if(NOT CMAKE_INSTALL_LOCAL_ONLY)
-  file(WRITE "C:/Users/brend/git_projects/C-Rogue/out/build/preset1/${CMAKE_INSTALL_MANIFEST}"
+  file(WRITE "C:/Users/Brendan/Documents/Git-Stuff/C-Rogue/out/build/preset1/${CMAKE_INSTALL_MANIFEST}"
      "${CMAKE_INSTALL_MANIFEST_CONTENT}")
 endif()

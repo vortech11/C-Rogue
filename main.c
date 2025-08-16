@@ -18,24 +18,11 @@
 
 RenderEngine renderEngine;
 
+Player player;
+
 bool running = true;
 
 const Color BG = {0, 0, 0};
-const Color PlayerColor;
-const Color WALL;
-
-////void moveRect(struct Rect* rect, int dx, int dy){
-////    Vector2 pointList[4]; 
-////    pointList[0] = rect->p1;
-////    pointList[1] = rect->p2;
-////    pointList[2] = rect->p3;
-////    pointList[3] = rect->p4;
-////
-////    for (int i = 0; i < 4; i++){
-////        pointList[i].x += dx;
-////        pointList[i].y += dy;
-////    }
-////}
 
 void getUserInput(){
     _getch();
@@ -61,7 +48,7 @@ void getUserInput(){
     if (GetAsyncKeyState('S') & 0x8000) move = add(move, right);
 
     move = scale(move, 1);
-    renderEngine.camera = add(renderEngine.camera, move);
+    movePlayer(move);
 }
 
 void* generateWorld(void* inputWorld){
@@ -83,6 +70,9 @@ void* generateWorld(void* inputWorld){
     renderEngine.cachedCos = cos(-renderEngine.rotation);
 
     drawRooms(world);
+
+    drawPlayer(world);
+
     return world;
 }
 
@@ -95,6 +85,9 @@ int main(){
 
     renderEngine.camera = set(0, 0);
     renderEngine.viewport = set(renderEngine.x - 2, renderEngine.y - 1);
+
+    player.position.x = 0;
+    player.position.y = 0;
 
     Room* room1 = createRoom((Vector2){10, 10}, 5, 10, 0);
     Room* room2 = createRoom((Vector2){-10, 20}, 3, 15, 2);

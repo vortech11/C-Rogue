@@ -4,7 +4,7 @@
 #include "point.h"
 
 void printPoint(Point point){
-    printColor(point.color);
+    printColorValues(point.color);
     printVector2(point.position);
     printf("\n");
 }
